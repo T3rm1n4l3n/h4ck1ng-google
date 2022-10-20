@@ -1,6 +1,6 @@
 # Hacker Chess
 [link](https://hackerchess-web.h4ck.ctfcompetition.com/)
-
+![Hacker Chess](hackerchess.png)
 
 
 ## Step 1
@@ -25,7 +25,7 @@ Considering php zhr injection then doppping for something simpler due to the cha
 >Hint: Don't make this game harder than it needs to be.
 
 ## Step 3 
-Discovered the [NASTER LOGIN](https://hackerchess-web.h4ck.ctfcompetition.com/admin.php) link at the bottom right of the page.
+Discovered the [MASTER LOGIN](https://hackerchess-web.h4ck.ctfcompetition.com/admin.php) link at the bottom right of the page.
 
 ## Step 4
 Tried out different user/password combinations with [Burp Suite](https://portswigger.net/burp) checking the response bite size to see when we get a significantly different response. 
@@ -61,7 +61,15 @@ We started exploring the game and realised it has dificulty levels. We again tri
 We thought, we maybe actually need to play and win but none of us were good at chess, so that did not last long.
 
 ## Step 7
-We noticed that there are two `GET`parameters that are set during the move. The first called  `move_start` that has the starting cell and `move_end` that contains the base64 encoding of the start position and end together with additional text that was not obviously useful/meaningfull. 
+We noticed that there are two `GET`parameters that are set during the move. The first called  `move_start` that has the starting cell and `move_end` that contains a string. We used [CyberChef](https://gchq.github.io/CyberChef) to decode the base64 value. e.g.
+```
+YToyOntpOjA7czoyOiJkMiI7aToxO3M6MjoiZDMiO30=
+```
+becomes
+```
+a:2:{i:0;s:2:"d2";i:1;s:2:"d3";}
+```
+ of the start position and end together with additional text that was not obviously useful/meaningfull. 
 
 ## Step 8 
 We explored typing in and encoding impossibile moves, but those did not do anything. When duplicating the entire variable value, the chess set stopped showing and we notice an interesting comment `<!-- XXX : Debug remove this -->`. 
@@ -146,7 +154,18 @@ The run returns `500` status code and the content of the environment variables i
 We visited the URL listed in the `REDIRECT_FLAG` and the challenge got marked as completed. 🎉
 
 # Alternative 2 
+We still believe there would be a way to exploit the html comment and get the flag that way. See `Step 14`.
 
 ## Step 18
-We still believe there would be a way to exploit the html comment and get the flag that way. See `Step 14`.
+We realised that the base64 decoded string is a serialised version of php code. Discovered using [W3Schools](https://www.w3schools.com/php/func_var_unserialize.asp)
+e.g.
+```
+a:3:{i:0;s:3:"Red";i:1;s:5:"Green";i:2;s:4:"Blue";}
+```
+is
+```
+array(2) { [0]=> string(2) "d2" [1]=> string(2) "d3" }
+```
+
+## Step 19
 
