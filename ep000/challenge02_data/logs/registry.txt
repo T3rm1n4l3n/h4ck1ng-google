@@ -1,0 +1,3 @@
+SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost\SysInst
+HKLM\SYSTEM\ControlSet001\Enum\Root\LEGACY_UPS
+HKLM\SYSTEM\CurrentControlSet\Enum\Root\LEGACY_UPS
