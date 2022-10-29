@@ -1,0 +1,87 @@
+<meta charset="utf-8">
+<title>Log Search Tool</title>
+<style>
+  .content {
+    min-width: 500px;
+    width: 500px;
+    margin: auto;
+    border: 1px solid black;
+    padding: 10px;
+    background-color: #eee;
+  }
+  h1 {
+    text-align: center;
+  }
+  select, input, textarea {
+    width: 100%;
+  }
+  textarea {
+    height: 300px;
+  }
+  .formelm {
+    margin-top: 5px;
+  }
+  .terms {
+    text-align: center;
+    font-size: smaller;
+    font-style: italic;
+  }
+</style>
+<script>
+  function search() {
+    const file = document.getElementById("files").value;
+    const term = document.getElementById("searchterm").value;
+    const url = document.location.origin + "?file=" + escape(file) + "&term=" + escape(term);
+    if (term.length < 4) {
+      alert("Search term must be at least 4 characters long!");
+      return;
+    }
+    document.getElementById("found").value = "Loading...";
+    const xhr = new XMLHttpRequest();
+    xhr.onload = function() {
+      document.getElementById("found").value = xhr.responseText;
+    }
+    xhr.open("GET", url);
+    xhr.send();
+  }
+</script>
+<div class="content">
+  <div class="title"><h1>Log Search Tool</h1></div>
+  <div class="formelm">
+    <label for="files">Choose a file...</label>
+    <div>
+      <select id="files">
+        <TMPL_LOOP NAME="FILES">
+          <option><TMPL_VAR NAME="NAME"></option>
+        </TMPL_LOOP>
+      </select>
+    </div>
+  </div>
+  <div class="formelm">
+    <label for="searchterm">Search term (at least 4 characters):</label>
+    <div><input id="searchterm" type="text" value="aurora"></div>
+  </div>
+  <div class="formelm">
+    <input type="button" value="Search..." onclick="search()">
+  </div>
+  <div class="formelm">
+    <label for="found">Found lines:</label>
+    <div><textarea id="found" wrap="off">File Content....</textarea></div>
+  </div>
+  <div class="terms">
+    <a href="https://policies.google.com/">Privacy & Terms</a>
+  </div>
+</div>
+<script
+    data-autoload-cookie-consent-bar="true"
+    data-autoload-cookie-consent-bar-intl-code=""
+    src="https://www.gstatic.com/brandstudio/kato/cookie_choice_component/cookie_consent_bar.v3.js"
+></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-06YS0MVC8B"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-06YS0MVC8B', { anonymize_ip: true, referrer: document.referrer.split('?')[0] });
+</script>

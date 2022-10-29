@@ -46,3 +46,5 @@ hostnames.txt
 strings.txt
 exploit.js
 ```
+
+https://aurora-web.h4ck.ctfcompetition.com/?file=../templates/default.html&term=%20%20%20%20
