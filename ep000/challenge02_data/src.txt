@@ -1,0 +1,55 @@
+use strict;
+use warnings;
+
+use utf8::all;
+use CGI;
+use HTML::Template;
+
+sub files_in_dir {
+  my $dirname = shift;
+  opendir my $dir, $dirname;
+  my @files = grep $_ ne "." && $_ ne "..", readdir $dir;
+  closedir $dir;
+  return @files;
+}
+
+sub find_lines {
+  my ($filename, $needle) = @_;
+  my @results = ();
+  if (length($needle) >= 4) {
+    # I am sure this is totally secure!
+    open(my $fh, "logs/".$filename);
+    while (my $line = <$fh>) {
+      if (index(lc($line), lc($needle)) >= 0) {
+        push(@results, $line);
+      }
+    }
+  }
+  return @results;
+}
+
+sub list_to_tmpl {
+  my ($tmpl_name, @elems) = @_;
+  my @results = ();
+  while (@elems) {
+    push(@results, {$tmpl_name, shift @elems});
+  }
+  return \@results;
+}
+
+sub main_page {
+  my $tmpl = HTML::Template->new(filename => "templates/default.html");
+  $tmpl->param(FILES => list_to_tmpl("NAME", files_in_dir("logs")));
+  return $tmpl->output;
+}
+
+my $q = CGI->new;
+
+my $pfile = $q->param("file");
+if (($pfile // "") eq "") {
+  print $q->header(-charset => "utf-8");
+  print main_page;
+} else {
+  print $q->header(-type => "text/plain", -charset => "utf-8");
+  print join("", find_lines($pfile, scalar $q->param("term")));
+}
