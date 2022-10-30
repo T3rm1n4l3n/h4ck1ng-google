@@ -48,7 +48,28 @@ We wrote a small program [hexdump_retriever](./challenge02_data/hexdump_retrieve
 
 ## Step 3
 
-We managed to see a backend Perl code. In this code, the program uses `open` function to open the file. This function is vulnerable, when the user-controlled filename is passed. [Read more](https://www.cgisecurity.com/lib/sips.html). Since we control the input, we can try to retrieve other files in server:
+We managed to see a backend Perl code. 
+```
+    open(my $article_fh, "ls >$needle |")      # ditto
+        or die "Can't start caesar: $!";
+
+    ...
+    sub find_lines {
+      my ($filename, $needle) = @_;
+      my @results = ();
+      if (length($needle) >= 4) {
+        # I am sure this is totally secure!
+        open(my $fh, "logs/".$filename);
+        while (my $line = <$fh>) {
+          if (index(lc($line), lc($needle)) >= 0) {
+            push(@results, $line);
+          }
+        }
+      }
+      return @results;
+    }
+```
+In this code, the program uses `open` function to open the file. This function is vulnerable, when the user-controlled filename is passed. [Read more](https://www.cgisecurity.com/lib/sips.html). Since we control the input, we can try to retrieve other files in server:
 
 https://aurora-web.h4ck.ctfcompetition.com/?file=../../../../etc/passwd&term=root
 The output:
